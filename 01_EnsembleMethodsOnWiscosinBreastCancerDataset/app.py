@@ -31,17 +31,12 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import RFECV
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold
+from sklearn.preprocessing import StandardScaler, Imputer
+from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
-#from sklearn.feature_selection import RFECV
 from sklearn import metrics
-
-from sklearn.model_selection import KFold
-from joblib import Parallel, delayed 
-
-
 
 ###############################################################################
 #                          2. Importing Libraries                             #
@@ -53,8 +48,7 @@ class RFECV:
     Parameters
     ----------
     estimator: estimator object
-    This is assumed to implement the scikit-learn estimator interface. Either
-    estimator needs to provide a score function, or scoring must be passed.
+    A Scikit-learn estimator with a feature_importances_ attribute.
         
     cv : int, cross-validation generator or an iterable, optional
     
@@ -143,9 +137,17 @@ class RFECV:
 ###############################################################################
 X, y = make_classification(n_samples = 2000, n_features = 30, n_redundant = 15,
                            n_informative = 5, n_repeated = 0, 
-                           n_clusters_per_class = 2, class_sep = 1,
+                           n_clusters_per_class = 2, class_sep = 0.75,
                            random_state = 1000)
 
+labels = [f"Feature {ii+1}" for ii in range(X.shape[1])]
+X = pd.DataFrame(X, columns = labels)
+y = pd.DataFrame(y, columns = ["Target"])
+
+# Numpy array to pandas dataframe
+labels = [f"Feature {ii+1}" for ii in range(X_train.shape[1])]
+X_train = pd.DataFrame(X_train, columns = labels)
+X_test = pd.DataFrame(X_test, columns = labels)
 
 ###############################################################################
 #                       4. Create train and test set                          #
@@ -154,18 +156,42 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20,
                                                     random_state = 1000)
 
 
+
 ###############################################################################
-#                             5. Feature scaling                              #
+#                     5. Removing highly correlated features                  #
+###############################################################################
+# Filter Method: Spearman's Cross Correlation > 0.95
+# Make correlation matrix
+corr_matrix = X_train.corr(method = "spearman").abs()
+
+# Draw the heatmap
+f, ax = plt.subplots(figsize=(11, 9))
+sns.heatmap(corr_matrix, cmap= "YlGnBu", square=True, linewidths=.5, cbar_kws={"shrink": .5}, ax = ax)
+f.tight_layout()
+
+# Select upper triangle of matrix
+upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k = 1).astype(np.bool))
+
+# Find index of feature columns with correlation greater than 0.95
+to_drop = [column for column in upper.columns if any(upper[column] > 0.95)]
+
+# Drop features
+X_train = X_train.drop(to_drop, axis = 1)
+
+
+
+###############################################################################
+#                           6. Feature Processing                             #
 ###############################################################################
 # Scale features via Z-score normalization
-sc= StandardScaler()
-X_train = sc.fit_transform(X_train)
-X_test = sc.transform(X_test)
+scaler = StandardScaler()
+rfecv = RFECV(estimator=RandomForestClassifier(), cv = 5)
+steps = [("scaler", scaler)]
+feature_processing = Pipeline(steps = steps)
 
-# numpy array to pandas dataframe
-labels = [f"Feature {ii+1}" for ii in range(X_train.shape[1])]
-X_train = pd.DataFrame(X_train, columns = labels)
-X_test = pd.DataFrame(X_test, columns = labels)
+
+
+
 
 
 ###############################################################################
@@ -195,18 +221,24 @@ classifier.set_params(**tuned_params)
 ###############################################################################
 #                          7. Feature selection                               #
 ###############################################################################
-# Filter Method: Spearman's Cross Correlation > 0.90
+# Filter Method: Spearman's Cross Correlation > 0.95
 # Make correlation matrix
 corr_matrix = X_train.corr(method = "spearman").abs()
+
+# Draw the heatmap
+f, ax = plt.subplots(figsize=(11, 9))
+sns.heatmap(corr_matrix, cmap= "YlGnBu", square=True, linewidths=.5, cbar_kws={"shrink": .5}, ax = ax)
+f.tight_layout()
 
 # Select upper triangle of matrix
 upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k = 1).astype(np.bool))
 
-# Find index of feature columsn with correlation greater than 0.90
-to_drop = [column for column in upper.columns if any(upper[column] > 0.85)]
+# Find index of feature columns with correlation greater than 0.95
+to_drop = [column for column in upper.columns if any(upper[column] > 0.95)]
 
 # Drop features
 X_train = X_train.drop(to_drop, axis = 1)
+
 
 
 # Wrapper Method: Recursive Feature Elimination with k-fold cross validation
