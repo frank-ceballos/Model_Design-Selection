@@ -1,18 +1,22 @@
 """ ***************************************************************************
 # * File Description:                                                         *
-# * Pipeline for model building                                               *
+# * Workflow for model building                                               *
 # *                                                                           *
 # * The contents of this script are:                                          *
 # * 1. Importing Libraries                                                    *
-# * 2. Define class                                                           *
-# * 3. Get data                                                               *
-# * 4. Create train and test set                                              *
-# * 5. Feature scaling                                                        *
-# * 6. Parameter tuning                                                       *
-# * 7. Feature selection                                                      *
-# * 8. Build model with selected features                                     *
-$ * 9. Cast and evaluate model predictions                                    *
-# * 10. Visualize results                                                     *
+# * 2. Get data                                                               *
+# * 3. Create train and test set                                              *
+# * 4. Classifiers                                                            *
+# * 5. Hyper-parameters                                                       *
+# * 6. Feature Selection: Removing highly correlated features                 *
+# * 7. Tuning a classifier to use with RFECV                                  *
+# * 8. Custom pipeline object to use with RFECV                               *
+# * 9. Feature Selection: Recursive Feature Selection with Cross Validation   *
+# * 10. Performance Curve                                                     *
+# * 11. Feature Selection: Recursive Feature Selection                        *
+# * 12. Visualizing Selected Features Importance                              *
+# * 13. Classifier Tuning and Evaluation                                      *
+# * 14. Visualing Results                                                     *
 # *                                                                           *
 # * --------------------------------------------------------------------------*
 # * AUTHORS(S): Frank Ceballos <frank.ceballos89@gmail.com>                   *
