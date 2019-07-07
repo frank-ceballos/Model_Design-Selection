@@ -1,2 +1,2 @@
-# Machine_Learning_Projects
-Portfolio
+# Model Design and Selection
+For details about this project
