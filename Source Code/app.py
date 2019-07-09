@@ -131,7 +131,7 @@ parameters.update({"AdaBoost": {
 parameters.update({"Bagging": { 
                                 "classifier__base_estimator": [DecisionTreeClassifier(max_depth = ii) for ii in range(1,6)],
                                 "classifier__n_estimators": [200],
-                                "classifier__max_features": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+                                "classifier__max_features": [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
                                 "classifier__n_jobs": [-1]
                                 }})
 
@@ -218,7 +218,7 @@ parameters.update({"LSVC": {
                              }})
 
 parameters.update({"NuSVC": { 
-                            "classifier__nu": [0.25, 0.50, 0.75, 0.9],
+                            "classifier__nu": [0.25, 0.50, 0.75],
                             "classifier__kernel": ["linear", "rbf", "poly"],
                             "classifier__degree": [1,2,3,4,5,6],
                              }})
